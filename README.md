@@ -224,3 +224,111 @@ Distribucion de clases (verificacion de estratificacion):
 #### 12. Resumen del Preprocesamiento
 
 ![Resumen Preprocesamiento](results/12_resumen_preprocesamiento.png)
+
+---
+
+## Implementacion de Clasificadores
+
+> Script: [`scr/3_EntrenarYEvaluar.py`](scr/3_EntrenarYEvaluar.py)
+
+### Modelo 1: Arbol de Decision
+
+Clasificador basado en particiones recursivas del espacio de features.
+
+| Parametro | Valor |
+|---|---|
+| max_depth | 10 |
+| min_samples_split | 20 |
+| min_samples_leaf | 10 |
+| class_weight | balanced |
+
+**Resultados:**
+
+| Metrica | Valor |
+|---|---|
+| Accuracy | 0.9778 |
+| F1-Score (weighted) | 0.9782 |
+| Precision (weighted) | 0.9794 |
+| Recall (weighted) | 0.9778 |
+| Tiempo de entrenamiento | 0.37s |
+
+### Modelo 2: SVM (Support Vector Machine)
+
+Se realizo **GridSearchCV** para encontrar la mejor combinacion de `kernel` y `C`:
+
+| kernel | C | F1 (CV) |
+|---|---|---|
+| **linear** | **10.0** | **0.6724** |
+| rbf | 10.0 | 0.6542 |
+| linear | 1.0 | 0.5718 |
+| rbf | 1.0 | 0.5586 |
+| linear | 0.1 | 0.4790 |
+| rbf | 0.1 | 0.4619 |
+
+**Mejores hiperparametros:** `kernel=linear`, `C=10.0`
+
+**Resultados:**
+
+| Metrica | Valor |
+|---|---|
+| Accuracy | 0.7196 |
+| F1-Score (weighted) | 0.6918 |
+| Precision (weighted) | 0.7760 |
+| Recall (weighted) | 0.7196 |
+| Tiempo de entrenamiento | 31.72s |
+
+> Nota: SVM fue entrenado con una muestra de 15,000 registros por su alto costo computacional. Su rendimiento inferior se debe a la complejidad no lineal de los datos financieros.
+
+### Modelo 3: Random Forest
+
+Ensamble de 200 arboles de decision con agregacion por votacion mayoritaria.
+
+| Parametro | Valor |
+|---|---|
+| n_estimators | 200 |
+| max_depth | 15 |
+| min_samples_split | 10 |
+| min_samples_leaf | 5 |
+| class_weight | balanced |
+
+**Resultados:**
+
+| Metrica | Valor |
+|---|---|
+| Accuracy | 0.9931 |
+| F1-Score (weighted) | 0.9931 |
+| Precision (weighted) | 0.9931 |
+| Recall (weighted) | 0.9931 |
+| Tiempo de entrenamiento | 5.46s |
+
+### Comparativa de Modelos
+
+| Modelo | Accuracy | F1 (weighted) | Precision | Recall | Tiempo |
+|---|---|---|---|---|---|
+| Arbol de Decision | 0.9778 | 0.9782 | 0.9794 | 0.9778 | 0.37s |
+| SVM | 0.7196 | 0.6918 | 0.7760 | 0.7196 | 31.72s |
+| **Random Forest** | **0.9931** | **0.9931** | **0.9931** | **0.9931** | **5.46s** |
+
+**Mejor modelo: Random Forest** con F1-Score de 0.9931. La feature mas importante es `UtilidadNeta` (importancia Gini = 0.3493).
+
+### Visualizaciones de Entrenamiento y Evaluacion
+
+#### 13. Matrices de Confusion Comparativa
+
+![Matrices de Confusion](results/13_matrices_confusion_comparativa.png)
+
+#### 14. Comparativa de Metricas
+
+![Comparativa Metricas](results/14_comparativa_metricas.png)
+
+#### 15. Visualizacion del Arbol de Decision
+
+![Arbol de Decision](results/15_arbol_decision_visualizacion.png)
+
+#### 16. Importancia de Features (Random Forest)
+
+![Importancia Features](results/16_importancia_features_rf.png)
+
+#### 17. GridSearchCV - SVM (Ajuste de Kernel y C)
+
+![GridSearch SVM](results/17_gridsearch_svm.png)
