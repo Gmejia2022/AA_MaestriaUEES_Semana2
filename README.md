@@ -333,6 +333,20 @@ Ensamble de 200 arboles de decision con agregacion por votacion mayoritaria.
 
 ![GridSearch SVM](results/17_gridsearch_svm.png)
 
+### Exportacion de Modelos
+
+Los 3 modelos entrenados junto con los artefactos de preprocesamiento fueron exportados a la carpeta [`Models/`](Models/) usando `joblib` para permitir inferencia futura sin reentrenamiento:
+
+| Archivo | Contenido |
+|---|---|
+| `arbol_decision.pkl` | Modelo Arbol de Decision entrenado |
+| `svm.pkl` | Modelo SVM (linear, C=10) entrenado |
+| `random_forest.pkl` | Modelo Random Forest entrenado |
+| `scaler.pkl` | StandardScaler ajustado a los datos de entrenamiento |
+| `label_encoder_target.pkl` | LabelEncoder de la variable objetivo (Alto/Bajo/Medio) |
+| `label_encoder_sector.pkl` | LabelEncoder de la variable Sector |
+| `feature_columns.pkl` | Lista ordenada de nombres de features |
+
 ---
 
 ## Comparacion Experimental
