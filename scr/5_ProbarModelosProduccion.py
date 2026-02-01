@@ -283,27 +283,104 @@ ax.set_ylim(0, 110)
 ax.grid(axis="y", linestyle="--", alpha=0.4)
 save_fig(fig, "25_accuracy_produccion.png")
 
-# --- 8.2 Confianza por modelo (boxplot) ---
-print("[2/5] Confianza por modelo...")
-fig, ax = plt.subplots(figsize=(10, 6))
-data_conf = []
+# --- 8.2 Radar de confiabilidad por modelo ---
+print("[2/7] Radar de confiabilidad por modelo...")
+
+# Calcular metricas de confiabilidad para cada modelo
+radar_metrics = {}
 for nombre_modelo, res in resultados_por_modelo.items():
-    for c in res["confianzas"]:
-        data_conf.append({"Modelo": nombre_modelo, "Confianza": c * 100})
+    confs = res["confianzas"]
+    aciertos = res["aciertos"]
+    n = len(aciertos)
 
-df_conf = pd.DataFrame(data_conf)
-sns.boxplot(data=df_conf, x="Modelo", y="Confianza", palette=colores_modelo, ax=ax,
-            width=0.4, linewidth=1.5)
-sns.stripplot(data=df_conf, x="Modelo", y="Confianza", color="black", size=6,
-              alpha=0.6, ax=ax, jitter=True)
-ax.set_ylabel("Confianza (%)", fontsize=12)
-ax.set_title("Distribucion de Confianza por Modelo en Produccion", fontsize=14, fontweight="bold")
-ax.set_ylim(0, 110)
-ax.grid(axis="y", linestyle="--", alpha=0.4)
-save_fig(fig, "26_confianza_produccion.png")
+    # Accuracy por clase
+    acc_por_clase = {}
+    for clase in le_target.classes_:
+        idx_c = [i for i, e in enumerate(esperados) if e == clase]
+        if idx_c:
+            acc_por_clase[clase] = sum(aciertos[i] for i in idx_c) / len(idx_c) * 100
 
-# --- 8.3 Heatmap de predicciones vs esperado ---
-print("[3/5] Heatmap de predicciones por empresa...")
+    radar_metrics[nombre_modelo] = {
+        "Accuracy\nGeneral": sum(aciertos) / n * 100,
+        "Confianza\nMedia": np.mean(confs) * 100,
+        "Confianza\nMinima": np.min(confs) * 100,
+        "Acc. Clase\nAlto": acc_por_clase.get("Alto", 0),
+        "Acc. Clase\nBajo": acc_por_clase.get("Bajo", 0),
+        "Acc. Clase\nMedio": acc_por_clase.get("Medio", 0),
+    }
+
+metric_names = list(list(radar_metrics.values())[0].keys())
+n_metrics = len(metric_names)
+angles = np.linspace(0, 2 * np.pi, n_metrics, endpoint=False).tolist()
+angles += angles[:1]
+
+fig, ax = plt.subplots(figsize=(9, 9), subplot_kw=dict(polar=True))
+
+for nombre_modelo in modelos.keys():
+    valores = [radar_metrics[nombre_modelo][m] for m in metric_names]
+    valores += valores[:1]
+    ax.plot(angles, valores, "o-", linewidth=2.5, markersize=8,
+            label=nombre_modelo, color=colores_modelo[nombre_modelo])
+    ax.fill(angles, valores, alpha=0.12, color=colores_modelo[nombre_modelo])
+
+ax.set_xticks(angles[:-1])
+ax.set_xticklabels(metric_names, fontsize=10, fontweight="bold")
+ax.set_ylim(0, 105)
+ax.set_yticks([20, 40, 60, 80, 100])
+ax.set_yticklabels(["20%", "40%", "60%", "80%", "100%"], fontsize=8, color="gray")
+ax.set_title("Radar de Confiabilidad por Modelo\n(Accuracy, Confianza y Desempeno por Clase)",
+             fontsize=14, fontweight="bold", pad=25)
+ax.legend(loc="lower right", bbox_to_anchor=(1.35, -0.02), fontsize=11,
+          frameon=True, fancybox=True, shadow=True)
+save_fig(fig, "26_radar_confiabilidad_modelos.png")
+
+# --- 8.3 Radar de confianza por empresa (mejor modelo) ---
+print("[3/7] Radar de confianza por empresa (todos los modelos)...")
+
+fig, axes = plt.subplots(2, 5, figsize=(24, 10), subplot_kw=dict(polar=True))
+axes = axes.flatten()
+
+empresa_angles = np.linspace(0, 2 * np.pi, len(modelos), endpoint=False).tolist()
+empresa_angles += empresa_angles[:1]
+modelo_labels = [n.replace(" ", "\n") for n in modelos.keys()]
+
+for i, emp in enumerate(empresas):
+    ax = axes[i]
+    valores = []
+    colores_emp = []
+    for nombre_modelo in modelos.keys():
+        conf = resultados_por_modelo[nombre_modelo]["confianzas"][i] * 100
+        valores.append(conf)
+        colores_emp.append(colores_modelo[nombre_modelo])
+
+    valores_plot = valores + valores[:1]
+    ax.plot(empresa_angles, valores_plot, "o-", linewidth=2, markersize=6, color="#2c3e50")
+    ax.fill(empresa_angles, valores_plot, alpha=0.2, color="#3498db")
+
+    # Colorear puntos segun acierto/fallo
+    for j, nombre_modelo in enumerate(modelos.keys()):
+        ok = resultados_por_modelo[nombre_modelo]["aciertos"][i]
+        color_punto = "#27ae60" if ok else "#e74c3c"
+        ax.plot(empresa_angles[j], valores[j], "o", markersize=10, color=color_punto,
+                markeredgecolor="black", markeredgewidth=0.5, zorder=5)
+
+    ax.set_xticks(empresa_angles[:-1])
+    ax.set_xticklabels(modelo_labels, fontsize=7)
+    ax.set_ylim(0, 105)
+    ax.set_yticks([25, 50, 75, 100])
+    ax.set_yticklabels(["25%", "50%", "75%", "100%"], fontsize=6, color="gray")
+
+    esperado_color = {"Alto": "#27ae60", "Medio": "#f39c12", "Bajo": "#e74c3c"}
+    ax.set_title(f"{emp['id']}. {emp['nombre'][:20]}\nEsperado: {esperados[i]}",
+                 fontsize=9, fontweight="bold", color=esperado_color[esperados[i]], pad=12)
+
+fig.suptitle("Radar de Confianza por Empresa\n(Verde=Acierto, Rojo=Fallo en cada modelo)",
+             fontsize=15, fontweight="bold", y=1.04)
+fig.tight_layout()
+save_fig(fig, "27_radar_confianza_por_empresa.png")
+
+# --- 8.4 Heatmap de predicciones vs esperado ---
+print("[4/7] Heatmap de predicciones por empresa...")
 fig, ax = plt.subplots(figsize=(14, 8))
 
 # Construir matriz: filas=empresas, cols=modelos, valor=1 si acierto, 0 si fallo
@@ -344,10 +421,10 @@ ax.set_title("Predicciones por Empresa y Modelo\n(Verde=Acierto, Rojo=Fallo | An
              fontsize=13, fontweight="bold")
 ax.set_ylabel("")
 ax.set_xlabel("")
-save_fig(fig, "27_heatmap_predicciones_empresa.png")
+save_fig(fig, "28_heatmap_predicciones_empresa.png")
 
-# --- 8.4 Barplot de accuracy por clase ---
-print("[4/5] Accuracy por clase y modelo...")
+# --- 8.5 Barplot de accuracy por clase ---
+print("[5/7] Accuracy por clase y modelo...")
 fig, ax = plt.subplots(figsize=(12, 6))
 
 clases_presentes = sorted(set(esperados))
@@ -377,10 +454,53 @@ ax.set_xticklabels(clases_presentes, fontsize=11)
 ax.legend(fontsize=10)
 ax.set_ylim(0, 120)
 ax.grid(axis="y", linestyle="--", alpha=0.4)
-save_fig(fig, "28_accuracy_por_clase_produccion.png")
+save_fig(fig, "29_accuracy_por_clase_produccion.png")
 
-# --- 8.5 Tabla visual del informe completo ---
-print("[5/5] Tabla visual del informe...")
+# --- 8.6 Radar resumen ejecutivo (Eficiencia vs Confiabilidad) ---
+print("[6/7] Radar resumen ejecutivo...")
+
+fig, ax = plt.subplots(figsize=(9, 9), subplot_kw=dict(polar=True))
+
+exec_metrics = ["Accuracy\nGeneral", "Confianza\nMedia", "Confianza\nMinima",
+                "Consistencia\n(Aciertos/Total)", "Acc. Clase\nMayoritaria"]
+
+for nombre_modelo in modelos.keys():
+    info = [i for i in informe_modelos if i["Modelo"] == nombre_modelo][0]
+    confs = resultados_por_modelo[nombre_modelo]["confianzas"]
+
+    # Clase mayoritaria = Bajo (la mas representada)
+    idx_bajo = [i for i, e in enumerate(esperados) if e == "Bajo"]
+    acc_bajo = sum(resultados_por_modelo[nombre_modelo]["aciertos"][i] for i in idx_bajo) / len(idx_bajo) * 100
+
+    vals = [
+        info["Accuracy (%)"],
+        info["Confianza Media (%)"],
+        info["Confianza Min (%)"],
+        info["Aciertos"] / info["Empresas"] * 100,
+        acc_bajo,
+    ]
+    vals += vals[:1]
+
+    exec_angles = np.linspace(0, 2 * np.pi, len(exec_metrics), endpoint=False).tolist()
+    exec_angles += exec_angles[:1]
+
+    ax.plot(exec_angles, vals, "o-", linewidth=2.5, markersize=8,
+            label=nombre_modelo, color=colores_modelo[nombre_modelo])
+    ax.fill(exec_angles, vals, alpha=0.1, color=colores_modelo[nombre_modelo])
+
+ax.set_xticks(exec_angles[:-1])
+ax.set_xticklabels(exec_metrics, fontsize=10, fontweight="bold")
+ax.set_ylim(0, 105)
+ax.set_yticks([20, 40, 60, 80, 100])
+ax.set_yticklabels(["20%", "40%", "60%", "80%", "100%"], fontsize=8, color="gray")
+ax.set_title("Resumen Ejecutivo: Eficiencia vs Confiabilidad",
+             fontsize=14, fontweight="bold", pad=25)
+ax.legend(loc="lower right", bbox_to_anchor=(1.35, -0.02), fontsize=11,
+          frameon=True, fancybox=True, shadow=True)
+save_fig(fig, "30_radar_resumen_ejecutivo.png")
+
+# --- 8.7 Tabla visual del informe completo ---
+print("[7/7] Tabla visual del informe...")
 fig, ax = plt.subplots(figsize=(18, 10))
 ax.axis("off")
 
@@ -445,7 +565,7 @@ for i in range(len(cell_data)):
 
 ax.set_title("Informe de Produccion: Predicciones, Confianza y Consenso por Empresa",
              fontsize=14, fontweight="bold", pad=25)
-save_fig(fig, "29_informe_produccion_completo.png")
+save_fig(fig, "31_informe_produccion_completo.png")
 
 # =========================================================
 # 9. RESUMEN FINAL

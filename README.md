@@ -5,7 +5,8 @@
 Repositorio para la materia de **Aprendizaje Automatico** - Maestria en Inteligencia Artificial, UEES.
 
 ---
-Estudiante:
+Estudiantes:
+
 Ingeniero Gonzalo Mejia Alcivar
 
 Ingeniero Jorge Ortiz Merchan
@@ -13,6 +14,10 @@ Ingeniero Jorge Ortiz Merchan
 Docente: Ingeniera GLADYS MARIA VILLEGAS RUGEL
 
 Fecha de Ultima Actualizacion: 01 Febrero 2026
+
+#Para instalar las Librerias y Dependiencias ejecute: 
+
+pip install -r requirements.txt
 
 ---
 
@@ -74,10 +79,7 @@ Al tratarse de un problema de **clasificacion multiclase supervisada**, se evalu
 
 - Arboles de Decision
 - Random Forest
-- Gradient Boosting (XGBoost, LightGBM)
 - Support Vector Machines (SVM)
-- Regresion Logistica Multinomial
-- Redes Neuronales (MLP)
 
 La seleccion del modelo final dependera de metricas de evaluacion como accuracy, precision, recall, F1-score y la matriz de confusion.
 
@@ -410,3 +412,89 @@ Los 3 modelos entrenados junto con los artefactos de preprocesamiento fueron exp
 #### 24. Tabla de Metricas por Clase
 
 ![Tabla Metricas por Clase](results/24_tabla_metricas_por_clase.png)
+
+---
+
+## Prueba de Modelos en Produccion
+
+> Script: [`scr/5_ProbarModelosProduccion.py`](scr/5_ProbarModelosProduccion.py)
+> Datos de prueba: [`Data/datos_prueba_produccion.json`](Data/datos_prueba_produccion.json)
+
+### Descripcion
+
+Se cargaron los 3 modelos exportados (`.pkl`) y se probaron con **10 empresas ficticias** definidas en un archivo JSON, cada una con un desempeno esperado (Alto, Medio o Bajo). El objetivo es evaluar la eficiencia y confiabilidad de cada modelo ante datos completamente nuevos.
+
+### Empresas de Prueba
+
+| ID | Empresa | Sector | Esperado |
+|---|---|---|---|
+| 1 | TechSolutions S.A. | SOCIETARIO | Alto |
+| 2 | AgroExport Cia. Ltda. | SOCIETARIO | Medio |
+| 3 | Constructora del Pacifico S.A. | SOCIETARIO | Alto |
+| 4 | MiniMarket Express | SOCIETARIO | Bajo |
+| 5 | Farmaceutica Nacional S.A. | SOCIETARIO | Alto |
+| 6 | Taller Mecanico Hermanos Lopez | SOCIETARIO | Bajo |
+| 7 | Valores del Litoral S.A. | MERCADO DE VALORES | Alto |
+| 8 | Distribuidora Andina Cia. Ltda. | SOCIETARIO | Medio |
+| 9 | Consultora Digital EC | SOCIETARIO | Medio |
+| 10 | Pesquera del Sur S.A. | SOCIETARIO | Bajo |
+
+### Informe de Eficiencia
+
+| Modelo | Aciertos | Accuracy | Confianza Media | Confianza Min | Confianza Max |
+|---|---|---|---|---|---|
+| Arbol de Decision | 5/10 | 50.0% | 92.9% | 65.1% | 100.0% |
+| SVM | 6/10 | 60.0% | 84.6% | 50.8% | 100.0% |
+| **Random Forest** | **7/10** | **70.0%** | **97.3%** | **86.7%** | **100.0%** |
+
+### Desglose por Clase
+
+| Modelo | Alto (4 emp.) | Bajo (3 emp.) | Medio (3 emp.) |
+|---|---|---|---|
+| Arbol de Decision | 100% (4/4) | 33.3% (1/3) | 0% (0/3) |
+| SVM | 100% (4/4) | 66.7% (2/3) | 0% (0/3) |
+| **Random Forest** | **100% (4/4)** | **100% (3/3)** | **0% (0/3)** |
+
+### Analisis de Confiabilidad
+
+- **Clase Alto:** Los 3 modelos clasifican correctamente el 100% de las empresas de alto desempeno.
+- **Clase Bajo:** Random Forest logra 100% de aciertos; Arbol de Decision confunde empresas pequenas con clase Medio.
+- **Clase Medio:** Ningun modelo logra clasificar correctamente las empresas de desempeno medio en produccion, ya que todas fueron predichas como Alto. Esto sugiere que la clase Medio es la mas dificil de distinguir con datos nuevos y podria requerir features adicionales o un umbral de clasificacion ajustado.
+- **Consenso unanime (3/3):** 4 de 10 empresas fueron clasificadas correctamente por los 3 modelos simultaneamente.
+- **Modelo mas confiable:** Random Forest, con la mayor accuracy (70%) y la confianza media mas alta (97.3%).
+
+### Visualizaciones de Produccion
+
+#### 25. Accuracy por Modelo en Produccion
+
+![Accuracy Produccion](results/25_accuracy_produccion.png)
+
+#### 26. Radar de Confiabilidad por Modelo
+
+Grafico radar con 6 dimensiones (Accuracy General, Confianza Media, Confianza Minima, Accuracy por clase Alto, Bajo y Medio) que permite comparar visualmente el perfil de confiabilidad de cada modelo.
+
+![Radar Confiabilidad](results/26_radar_confiabilidad_modelos.png)
+
+#### 27. Radar de Confianza por Empresa
+
+Panel de 10 graficos radar individuales (uno por empresa), mostrando la confianza de cada modelo. Los puntos verdes indican aciertos y los rojos indican fallos.
+
+![Radar por Empresa](results/27_radar_confianza_por_empresa.png)
+
+#### 28. Heatmap de Predicciones por Empresa
+
+![Heatmap Predicciones](results/28_heatmap_predicciones_empresa.png)
+
+#### 29. Accuracy por Clase en Produccion
+
+![Accuracy por Clase](results/29_accuracy_por_clase_produccion.png)
+
+#### 30. Radar Resumen Ejecutivo
+
+Grafico radar con 5 dimensiones (Accuracy General, Confianza Media, Confianza Minima, Consistencia, Accuracy Clase Mayoritaria) que resume la eficiencia vs confiabilidad de cada modelo.
+
+![Radar Resumen Ejecutivo](results/30_radar_resumen_ejecutivo.png)
+
+#### 31. Informe Completo de Produccion
+
+![Informe Produccion](results/31_informe_produccion_completo.png)
