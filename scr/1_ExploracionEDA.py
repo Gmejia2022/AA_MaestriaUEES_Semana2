@@ -9,6 +9,7 @@ Maestria en Inteligencia Artificial
 Estudiantes:
   - Ingeniero Gonzalo Mejia Alcivar
   - Ingeniero Jorge Ortiz Merchan
+  - Ingeniero David Perugachi Rojas
 
 Objetivo:
   Realizar el analisis exploratorio del dataset de empresas del Ecuador 2024,

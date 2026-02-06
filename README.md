@@ -11,6 +11,8 @@ Ingeniero Gonzalo Mejia Alcivar
 
 Ingeniero Jorge Ortiz Merchan
 
+Ingeniero David Perugachi Rojas
+
 Docente: Ingeniera GLADYS MARIA VILLEGAS RUGEL
 
 Fecha de Ultima Actualizacion: 01 Febrero 2026

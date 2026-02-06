@@ -9,6 +9,7 @@ Maestria en Inteligencia Artificial
 Estudiantes:
   - Ingeniero Gonzalo Mejia Alcivar
   - Ingeniero Jorge Ortiz Merchan
+  - Ingeniero David Perugachi Rojas
 
 Objetivo:
   Cargar los modelos exportados (.pkl) y probarlos con datos nuevos

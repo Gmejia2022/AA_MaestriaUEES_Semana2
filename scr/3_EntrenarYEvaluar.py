@@ -9,6 +9,7 @@ Maestria en Inteligencia Artificial
 Estudiantes:
   - Ingeniero Gonzalo Mejia Alcivar
   - Ingeniero Jorge Ortiz Merchan
+  - Ingeniero David Perugachi Rojas
 
 Objetivo:
   Entrenar y evaluar 3 modelos de clasificacion:
