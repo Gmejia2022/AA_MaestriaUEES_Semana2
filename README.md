@@ -15,7 +15,7 @@ Ingeniero David Perugachi Rojas
 
 Docente: Ingeniera GLADYS MARIA VILLEGAS RUGEL
 
-Fecha de Ultima Actualizacion: 01 Febrero 2026
+Fecha de Ultima Actualizacion: 05 Febrero 2026
 
 # Para instalar las Librerias y Dependiencias ejecute: 
 
