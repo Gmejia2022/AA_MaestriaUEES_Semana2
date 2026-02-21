@@ -24,7 +24,3 @@ venv/
 Thumbs.db
 .DS_Store
 desktop.ini
-
-# === Archivos excluidos del proyecto ===
-*.docx
-scr/6_GenerarInformeWord.py
